@@ -1,46 +1,53 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>채팅 서버</title>
-    <script src="/socket.io/socket.io.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        #messages { list-style-type: none; padding: 0; }
-        #messages li { padding: 8px; border-bottom: 1px solid #ddd; }
-        #form { display: flex; }
-        #input { flex: 1; padding: 8px; }
-        #send { padding: 8px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat</title>
+  <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-    <h1>채팅 서버</h1>
-    <ul id="messages"></ul>
-    <form id="form" action="">
-        <input id="input" autocomplete="off" placeholder="메시지를 입력하세요..." />
-        <button id="send">보내기</button>
-    </form>
+  <h1>Chat Room</h1>
 
-    <script>
-        const socket = io();
+  <!-- 닉네임 입력 -->
+  <input id="nickname" type="text" placeholder="Enter your nickname" required />
+  <br>
+  <textarea id="chat-box" rows="10" cols="30" disabled></textarea>
+  <br>
 
-        // 메시지 전송
-        document.getElementById('form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const input = document.getElementById('input');
-            if (input.value) {
-                socket.emit('chat message', input.value);
-                input.value = '';
-            }
-        });
+  <!-- 메시지 입력 -->
+  <input id="message" type="text" placeholder="Enter message" />
+  <button id="send">Send</button>
 
-        // 메시지 수신
-        socket.on('chat message', function(msg) {
-            const li = document.createElement('li');
-            li.textContent = msg;
-            document.getElementById('messages').appendChild(li);
-        });
-    </script>
+  <script>
+    const socket = io();
+    const nicknameInput = document.getElementById('nickname');
+    const messageInput = document.getElementById('message');
+    const chatBox = document.getElementById('chat-box');
+    const sendButton = document.getElementById('send');
+    let userId = '';
+
+    // 닉네임이 입력되면 userId 설정
+    nicknameInput.addEventListener('input', () => {
+      userId = nicknameInput.value;
+    });
+
+    // 채팅 메시지 전송
+    sendButton.addEventListener('click', () => {
+      if (userId && messageInput.value.trim() !== '') {
+        const message = messageInput.value;
+        socket.emit('chat message', { id: userId, message: message });
+        messageInput.value = ''; // 입력 필드 초기화
+      } else {
+        alert('Please enter a nickname and a message.');
+      }
+    });
+
+    // 서버로부터 메시지를 받아 채팅 박스에 표시
+    socket.on('chat message', (msg) => {
+      chatBox.value += msg + '\n';
+      chatBox.scrollTop = chatBox.scrollHeight; // 최신 메시지가 보이도록 스크롤
+    });
+  </script>
 </body>
 </html>
